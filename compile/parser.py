@@ -36,7 +36,7 @@ class Parser(object):
         if self.match(TokenType.PRINT):
             return self.printStatement()
         elif self.match(TokenType.LEFT_BRACE):
-            return Stmt.Block(block())
+            return StmtBlock(self.block())
 
         return self.expressionStatement()
 
@@ -47,28 +47,28 @@ class Parser(object):
         if self.match(TokenType.EQUAL):
             initializer = self.expression()
 
-        self.consume(TokenType.SEMICOLON,
-                     "Expect ';' after variable declaration.")
+        # self.consume(TokenType.SEMICOLON,
+        #              "Expect ';' after variable declaration.")
         return StmtVar(type_token, name, initializer)
 
     def printStatement(self):
         value = self.expression()
-        self.consume(TokenType.SEMICOLON, "Expected ';' after value.")
+        # self.consume(TokenType.SEMICOLON, "Expected ';' after value.")
         return StmtPrint(value)
 
     def expressionStatement(self):
         expr = self.expression()
-        self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        # self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
 
         return StmtExpression(expr)
 
     def block(self):
         statements = []
 
-        while not self.check(RIGHT_BRACE) and not self.isAtEnd():
-            statements.add(declaration())
+        while not self.check(TokenType.RIGHT_BRACE) and not self.isAtEnd():
+            statements.append(self.declaration())
 
-        consume(RIGHT_BRACE, "Expect '}' after block.")
+        self.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.")
         return statements
 
     def expression(self):

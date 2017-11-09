@@ -20,6 +20,20 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
     def execute(self, stmt):
         stmt.accept(self)
 
+    def visitBlockStmt(self, stmt):
+        self.executeBlock(stmt.statements, Environment(self.environment))
+
+    def executeBlock(self, statements, environment):
+        previous = self.environment
+
+        try:
+            self.environment = environment
+
+            for statement in statements:
+                self.execute(statement)
+        except ProgramRuntimeError:
+            self.environment = previous
+
     # ExprAssign
     def visitAssignExpr(self, expr):
         value = self.evaluate(expr.value)
