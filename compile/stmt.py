@@ -1,5 +1,9 @@
 class Stmt(object):
     class Visitor(object):
+		# Stmt.Block stmt
+		def visitBlockStmt(stmt):
+			raise NotImplementedError('Class {} doesn\'t implement visitBlockStmt()'.format(self.__class__.__name__))
+
         # Stmt.Expression stmt
         def visitExpressionStmt(stmt):
             raise NotImplementedError(
@@ -14,6 +18,16 @@ class Stmt(object):
         def visitVarStmt(stmt):
             raise NotImplementedError(
                 'Class {} doesn\'t implement visitVarStmt()'.format(self.__class__.__name__))
+
+
+class StmtBlock(Stmt):
+	def __init__(self, statements):
+		# List<Stmt>
+		self.statements = statements
+
+
+	def accept(self, visitor):
+		return visitor.visitBlockStmt(self);
 
 
 class StmtExpression(Stmt):

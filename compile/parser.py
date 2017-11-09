@@ -3,6 +3,7 @@ from expr import *
 from error import *
 from stmt import *
 
+
 class Parser(object):
     def __init__(self, tokens):
         self.tokens = tokens
@@ -34,6 +35,8 @@ class Parser(object):
     def statement(self):
         if self.match(TokenType.PRINT):
             return self.printStatement()
+        elif self.match(TokenType.LEFT_BRACE):
+            return Stmt.Block(block())
 
         return self.expressionStatement()
 
@@ -44,7 +47,8 @@ class Parser(object):
         if self.match(TokenType.EQUAL):
             initializer = self.expression()
 
-        self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
+        self.consume(TokenType.SEMICOLON,
+                     "Expect ';' after variable declaration.")
         return StmtVar(type_token, name, initializer)
 
     def printStatement(self):
@@ -57,6 +61,15 @@ class Parser(object):
         self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
 
         return StmtExpression(expr)
+
+    def block(self):
+        statements = []
+
+        while not self.check(RIGHT_BRACE) and not self.isAtEnd():
+            statements.add(declaration())
+
+        consume(RIGHT_BRACE, "Expect '}' after block.")
+        return statements
 
     def expression(self):
         return self.assignment()
@@ -72,10 +85,10 @@ class Parser(object):
                 name = expr.name
                 return ExprAssign(name, value)
 
-            ErrorHandler.report("Invalid assignment target at char {}".format(equals), equals.line)
+            ErrorHandler.report(
+                "Invalid assignment target at char {}".format(equals), equals.line)
 
         return expr
-
 
     def equality(self):
         expr = self.comparison()
@@ -91,9 +104,9 @@ class Parser(object):
         expr = self.term()
 
         while self.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL):
-          operator = self.previous()
-          right = self.term()
-          expr = ExprBinary(expr, operator, right)
+            operator = self.previous()
+            right = self.term()
+            expr = ExprBinary(expr, operator, right)
 
         return expr
 
@@ -101,9 +114,9 @@ class Parser(object):
         expr = self.factor()
 
         while self.match(TokenType.MINUS, TokenType.PLUS):
-          operator = self.previous()
-          right = self.factor()
-          expr = ExprBinary(expr, operator, right)
+            operator = self.previous()
+            right = self.factor()
+            expr = ExprBinary(expr, operator, right)
 
         return expr
 
@@ -144,14 +157,15 @@ class Parser(object):
             self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return ExprGrouping(expr)
 
-        ErrorHandler.report(ParserError("Expected expression. Instead got {}".format(str(self.peek().literal))), self.peek().line)
+        ErrorHandler.report(ParserError("Expected expression. Instead got {}".format(
+            str(self.peek().literal))), self.peek().line)
 
     def consume(self, type_, message):
         if self.check(type_):
             return self.advance()
 
-        ErrorHandler.report(ParserError(message + ' at token ' + str(self.peek().literal)), self.peek().line)
-
+        ErrorHandler.report(ParserError(
+            message + ' at token ' + str(self.peek().literal)), self.peek().line)
 
     def match(self, *types):
         for type_ in types:

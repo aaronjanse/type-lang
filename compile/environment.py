@@ -1,6 +1,7 @@
 from error import *
 from lang_types import is_type
 
+
 class Environment(object):
     def __init__(self, enclosing=None):
         self.enclosing = enclosing

@@ -23,7 +23,7 @@ class Main(object):
 
         self.interpreter.interpret(statements)
 
-        # print(AstPrinter().printExpr(expression));
+        # print(AstPrinter().printExpr(expression))
 
 
 main = Main()
