@@ -6,10 +6,13 @@ class ErrorHandler(object):
 
     @classmethod
     def report(cls, exception, line=None):
+        error_text = ''
         if line is not None:
-            print('[line {}]', end=' ')
+            error_text += '[line {}]'.format(line)
 
-        print('{}: {}'.format(line, type(exception).__name__, str(exception)))
+        error_text = '{}: {}'.format(type(exception).__name__, str(exception))
+        print(error_text)
+
         cls.errored = True
 
         if isinstance(exception, ProgramRuntimeError):
