@@ -33,12 +33,29 @@ class Parser(object):
             return None
 
     def statement(self):
-        if self.match(TokenType.PRINT):
+        if self.match(TokenType.IF):
+            return self.ifStatement()
+        elif self.match(TokenType.PRINT):
             return self.printStatement()
         elif self.match(TokenType.LEFT_BRACE):
             return StmtBlock(self.block())
 
         return self.expressionStatement()
+
+    def ifStatement(self):
+        condition = self.expression()
+
+        self.consume(TokenType.LEFT_BRACE, "Expect '{' before thenBranch.")
+        thenBranch = self.statement()
+        self.consume(TokenType.RIGHT_BRACE, "Expect '}' after thenBranch.")
+
+        elseBranch = None
+        if self.match(TokenType.ELSE):
+            self.consume(TokenType.LEFT_BRACE, "Expect '{' before elseBranch.")
+            elseBranch = self.statement()
+            self.consume(TokenType.RIGHT_BRACE, "Expect '}' after elseBranch.")
+
+        return StmtIf(condition, thenBranch, elseBranch)
 
     def varDeclaration(self, type_token):
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
@@ -75,7 +92,7 @@ class Parser(object):
         return self.assignment()
 
     def assignment(self):
-        expr = self.equality()
+        expr = self.or_()
 
         if self.match(TokenType.EQUAL):
             equals = self.previous()
@@ -87,6 +104,26 @@ class Parser(object):
 
             ErrorHandler.report(
                 "Invalid assignment target at char {}".format(equals), equals.line)
+
+        return expr
+
+    def or_(self):
+        expr = self.and_()
+
+        while self.match(TokenType.OR):
+            operator = self.previous()
+            right = self.and_()
+            expr = ExprLogical(expr, operator, right)
+
+        return expr
+
+    def and_(self):
+        expr = self.equality()
+
+        while self.match(TokenType.AND):
+            operator = self.previous()
+            right = self.equality()
+            expr = ExprLogical(expr, operator, right)
 
         return expr
 

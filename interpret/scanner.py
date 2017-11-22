@@ -60,7 +60,7 @@ class Scanner(object):
         self.stripComments()
 
     def stripComments(self):
-        self.source = re.sub(r'\/\/[^"\']*\n', '', self.source)
+        self.source = re.sub(r'\/\/.*\n', '', self.source)
         self.source = re.sub(r';\s*\n', '', self.source)  # XXX: remove trailing semicolons
 
     def scanTokens(self):

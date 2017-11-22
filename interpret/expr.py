@@ -20,6 +20,11 @@ class Expr(object):
 
             return str(expr.value)
 
+        # Expr.Logical expr
+        def visitLogicalExpr(expr):
+            raise NotImplementedError(
+                'Class {} doesn\'t implement visitLogicalExpr()'.format(self.__class__.__name__))
+
         # Expr.Unary expr
         def visitUnaryExpr(self, expr):
             return self._parenthesize(expr.operator.lexeme, expr.right)
@@ -84,6 +89,21 @@ class ExprLiteral(Expr):
 
     def accept(self, visitor):
         return visitor.visitLiteralExpr(self)
+
+
+class ExprLogical(Expr):
+    def __init__(self, left, operator, right):
+        # Expr
+        self.left = left
+
+        # Token
+        self.operator = operator
+
+        # Expr
+        self.right = right
+
+    def accept(self, visitor):
+        return visitor.visitLogicalExpr(self)
 
 
 class ExprUnary(Expr):
