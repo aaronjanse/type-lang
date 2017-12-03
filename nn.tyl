@@ -1,0 +1,243 @@
+from random import randrange
+import math
+
+const step_size = 0.01
+
+typedef Unit of {
+    float value,
+    float grad
+}
+
+// helper function
+func sig :: float .x {
+    return 1 / (1 + math'exp(-x))
+}
+
+/*** Neuron code ***/
+typedef Neuron of {
+    int num_inputs,
+    Unit[] inputs,
+    Unit[] outputs,
+    Unit[] weights,
+    _ float last_output
+    _ Unit utop
+}
+
+construct Neuron :: self, int num_inputs {
+  self.num_inputs = $
+
+  self.weights = []
+  for i in ..<num_inputs {
+      self.weights.append(Unit{value=randrange.randrange(-1, 1), grad=0})
+  }
+}
+
+func forward :: Neuron .self, Unit[] inputs -> Unit {
+    self.inputs = $
+    
+    float sum_ = 0
+    for input, weight in zip(self.inputs, self.weights) {
+        sum_ += input.value * weight.value
+    }
+
+    float s = sum_.sig()
+
+    self.utop = Unit{value=s, grad=0}
+
+    self.last_output = s
+    return self.utop
+}
+
+func backward :: Neuron .self {
+    float s = self.last_output
+    float sum_grad = (s * (1 - s)) * self.utop.grad
+
+    for i in ..<self.num_inputs {
+        self.inputs[i].grad += self.weights[i].value * sum_grad
+        self.weights[i].grad += self.inputs[i].value * sum_grad
+    }
+}
+
+func updateWeights :: Neuron .self {
+    for i in ..<self.num_inputs {
+        // Update value
+        self.weights[i].value += self.weights[i].grad * step_size
+    }
+}
+
+func resetGrads :: Neuron .self {
+    for i in ..<self.num_inputs {
+        self.inputs[i].grad = 0
+        self.weights[i].grad = 0
+    }
+}
+
+/*** Network code ***/
+typedef Network of {
+    int num_hidden_layers,
+    int hidden_layer_size,
+    Neuron[] layers,
+    Unit[] inputs_units,
+    _ Unit output
+}
+
+construct Network :: self, int num_hidden_layers, int hidden_layer_size, int input_length {
+    assert num_hidden_layers > 0
+
+    self.num_hidden_layers = num_hidden_layers
+    self.hidden_layer_size = hidden_layer_size
+
+    self.inputs_units = [Unit{value=0, grad=0}] * input_length
+
+    self.layers = []
+    for layer_num in ..<self.num_hidden_layers {
+        if (layer_num == 0) {
+            int num_inputs = input_length
+        } else {
+            int num_inputs = self.hidden_layer_size
+        }
+
+        self.layers.append([new Neuron(num_inputs)] * self.hidden_layer_size)
+    }
+
+    // Output neuron
+    self.layers.append([new Neuron(self.hidden_layer_size)])
+}
+
+func forward :: Network .self, Unit[] inputs -> float {
+    self.inputs = $
+
+    Unit[] last_outputs = None
+    for layer_num in ..<len(self.layers) {
+        if (layer_num == 0) {
+            Unit[] neuron_inputs = self.inputs
+        } else {
+            Unit[] neuron_inputs = last_outputs
+        }
+
+        last_outputs = []
+        for neuron_num in ..<len(self.layers[layer_num]) {
+            Neuron neuron = self.layers[layer_num][neuron_num]
+            Unit out = neuron!forward(neuron_inputs)
+            last_outputs.append(out)
+        }
+    }
+
+    self.output = last_outputs[0]
+    return self.output.value
+}
+
+func backward :: Network .self, Unit top_grad {
+    self.layers[self.layers.length - 1][0].utop.grad = top_grad
+
+    // Go backwards
+    for layer_num in (..<len(self.layers)).reverse() {
+        // Order doesn't matter within the layer
+        for neuron_num in ..<len(self.layers[layer_num]) {
+            Neuron neuron = self.layers[layer_num][neuron_num]
+            neuron!backward()
+        }
+    }
+}
+
+// Label must be ±1
+// Returns the top grad
+func learnFrom :: Network .self, float[] inputs, float label -> float {
+    for i in ..<len(inputs) {
+        self.inputs_units[i].value = inputs[i]
+        self.inputs_units[i].grad = 0.0
+    }
+
+    output = self.forward(self.inputs_units)
+    output = math'sign(output * 2 - 1)
+
+    float top_grad = 0
+    if label > 0 and output <= 0 {
+        top_grad = 1
+    } elif label < 0 and output >= 0 {
+        top_grad = -1
+    }
+
+    self!backward(top_grad)
+    self!updateWeights()
+    self!resetAllGrads()
+
+    return top_grad
+}
+
+func resetAllGrads :: Network .self {
+    for layer_num, neuron_num in self._neuron_iterator() {
+        Neuron neuron = self.layers[layer_num][neuron_num]
+        neuron!resetGrads()
+    }
+}
+
+func updateWeights :: Network .self {
+    for layer_num, neuron_num in self._neuron_iterator() {
+        Neuron neuron = self.layers[layer_num][neuron_num]
+        neuron!updateWeights()
+    }
+}
+
+func _neuron_iterator :: Network .self {
+    for layer_num in ..<self.num_hidden_layers {
+        for neuron_num in ..<self.hidden_layer_size {
+            yield layer_num, neuron_num
+        }
+    }
+}
+
+/*** Main **/
+
+// Initialize neural network
+num_hidden_layers = 2
+hidden_layer_size = 2
+input_length = 2
+
+Network nn = new Network(num_hidden_layers, hidden_layer_size, input_length)
+
+// Generate data
+data = []
+labels = []
+
+data.append([0, 0])
+labels.append(-1)
+
+data.append([0, 1])
+labels.append(1)
+
+data.append([1, 0])
+labels.append(1)
+
+data.append([1, 1])
+labels.append(-1)
+
+int report_interval = 50000
+
+float error_sum = 0
+for i in 0..<1000000 {
+    for j in 0..<len(data) {
+        float top_grad = nn!learnFrom(data[j], labels[j])
+        float error = abs(top_grad)
+        error_sum += error / report_interval
+    }
+
+    if i % report_interval == 0 {
+        print(error_sum)
+        print('avg error: ${error_sum}')
+        error_sum = 0
+    }
+}
+
+for i in 0..<10 {
+    Unit[] test_data = [Unit(data[i % 4][0], 0.0),
+                        Unit(data[i % 4][1], 0.0)]
+
+    Unit val = nn!forward(test_data)
+    val = math'sign(val * 2 - 1)
+
+    print(data[i % 4])
+    print(val)
+    print(val == labels[i % 4])
+    print('')
+}
