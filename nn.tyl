@@ -24,12 +24,12 @@ typedef Neuron of {
 }
 
 construct Neuron :: self, int num_inputs {
-  self.num_inputs = $
+    self.num_inputs = $
 
-  self.weights = []
-  for i in ..<num_inputs {
-      self.weights.append(Unit{value=randrange.randrange(-1, 1), grad=0})
-  }
+    self.weights = []
+    for i in ..<num_inputs {
+        self.weights.append(Unit{value=randrange.randrange(-1, 1), grad=0})
+    }
 }
 
 func forward :: Neuron .self, Unit[] inputs -> Unit {
