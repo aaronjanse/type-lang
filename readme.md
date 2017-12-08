@@ -280,3 +280,20 @@ assert (a, b, c) == (1, 2, 3) // true
 assert (a, b, c)!sum_so_far() == (1, 3, 6) // true
 assert (a, b, c) == (1, 3, 6) // true
 ```
+
+
+
+When to use a .parameter vs normal one:
+
+.param:
+- what is being acted upon
+- where info is coming from
+- what the function is relavent to (this keeps a clean namespace)
+- the _subject_ (-ish)
+- sometimes the _direct object_
+- never optional
+
+normal param:
+- specifies how something should be done
+- the _indirect object(s)_
+- optional

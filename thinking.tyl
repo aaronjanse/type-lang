@@ -1,0 +1,78 @@
+// remove specified letter, counting how many letters removed
+func deduplicate :: str .self, str char -> .str, int {
+    int num_letters_removed = 0
+    str output = ''
+    for letter in self {
+        if letter != char {
+            output += letter
+        } else {
+            num_letters_removed += 1
+        }
+    }
+
+    return .output, num_letters_removed
+}
+
+str foo = "hello, world"
+
+int n = foo.count('o')
+
+
+/*******/
+
+func append_str :: str .self, str suffix :: .str {
+    self += suffix
+}
+
+str foo = "hello "
+foo!append_str('world')
+
+
+/*******/
+
+foo!bar()
+.foo = foo.bar()
+
+x = foo!bar()
+.foo, x = foo.bar()
+
+x = foo.bar()
+
+foo.bar() // NOP
+
+/*******/
+
+func calc_sum :: int *nums -> int {
+    return sum(nums)
+}
+
+assert calc_sum(1, 2, 3, 4) == 10
+
+/*******/
+
+func triple :: int .nums* -> .nums {
+    nums = [n*3 for n in nums]
+}
+
+
+int a = 1, b = 2, c = 3
+
+(a, b, c)!triple()
+
+assert a, b, c == (2, 6, 9)
+
+assert (1, 2, 3).triple() == (2, 6, 9)
+
+
+
+
+/*******/
+
+math {
+    func sign :: int num -> int {
+        return 123
+    }
+}
+
+
+math'sign(3)
