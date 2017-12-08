@@ -190,15 +190,15 @@ func _neuron_iterator :: Network .self {
 /*** Main **/
 
 // Initialize neural network
-num_hidden_layers = 2
-hidden_layer_size = 2
-input_length = 2
+const int num_hidden_layers = 2
+const int hidden_layer_size = 2
+const int input_length = 2
 
 Network nn = new Network(num_hidden_layers, hidden_layer_size, input_length)
 
 // Generate data
-data = []
-labels = []
+int[][2] data = []
+int[] labels = []
 
 data.append([0, 0])
 labels.append(-1)
